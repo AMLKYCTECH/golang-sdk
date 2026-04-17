@@ -189,3 +189,151 @@ type FastCheckListResponse struct {
 type InvestigationListResponse struct {
 	Data []Investigation `json:"data"`
 }
+
+// KycVerification represents a KYC verification entity
+type KycVerification struct {
+	ID                    int                    `json:"id"`
+	UUID                  string                 `json:"uuid"`
+	UserID                int                    `json:"user_id"`
+	Email                 string                 `json:"email"`
+	Status                int                    `json:"status"` // 0: new, 1: process, 2: moderate, 3: fail, 4: success
+	Step                  int                    `json:"step"`
+	StartTime             *time.Time             `json:"start_time"`
+	EndTime               *time.Time             `json:"end_time"`
+	DocType               *string                `json:"doc_type"`
+	DocInfo               map[string]interface{} `json:"doc_info"`
+	StepsInfo             map[string]interface{} `json:"steps_info"`
+	ComparePhoto          map[string]interface{} `json:"compare_photo"`
+	StatusCheckUser       *int                   `json:"status_check_user"`
+	StatusCheckPhoto      *int                   `json:"status_check_photo"`
+	CountryRestrictionMode string                `json:"country_restriction_mode"` // all, whitelist
+	AllowedCountries      []string               `json:"allowed_countries"`
+	AllowedDocumentTypes  []string               `json:"allowed_document_types"`
+	LivenessScore         *float64               `json:"liveness_score"`
+	LivenessStatus        int                    `json:"liveness_status"` // 0: pending, 1: pass, 2: fail
+	LivenessAttempts      int                    `json:"liveness_attempts"`
+	CreatedAt             time.Time              `json:"created_at"`
+	UpdatedAt             time.Time              `json:"updated_at"`
+}
+
+// KycParams represents session parameters returned during KYC flow
+type KycParams struct {
+	Success      bool                   `json:"success"`
+	UUID         string                 `json:"uuid"`
+	StartTime    *time.Time             `json:"start_time"`
+	Status       int                    `json:"status"`
+	Step         int                    `json:"step"`
+	SessionEnd   *time.Time             `json:"session_end"`
+	Steps        map[string]interface{} `json:"steps"`
+	Restrictions *KycRestrictions       `json:"restrictions"`
+}
+
+// KycRestrictions holds country/document restrictions for a KYC session
+type KycRestrictions struct {
+	CountryMode          string   `json:"countryMode"`
+	AllowedCountries     []string `json:"allowedCountries"`
+	AllowedDocumentTypes []string `json:"allowedDocumentTypes"`
+}
+
+// KycCreateRequest represents the request body for creating a KYC verification
+type KycCreateRequest struct {
+	Email                  string   `json:"email"`
+	CountryRestrictionMode string   `json:"country_restriction_mode,omitempty"`
+	AllowedCountries       []string `json:"allowed_countries,omitempty"`
+	AllowedDocumentTypes   []string `json:"allowed_document_types,omitempty"`
+}
+
+// KycCreateResponse represents the response when creating a KYC verification
+type KycCreateResponse struct {
+	Success bool            `json:"success"`
+	Item    KycVerification `json:"item"`
+}
+
+// KycListResponse represents the response for listing KYC verifications
+type KycListResponse struct {
+	Items []KycVerification `json:"items"`
+}
+
+// KycUploadRequest represents the request body for uploading documents
+type KycUploadRequest struct {
+	Cadrs        []string `json:"cadrs"`
+	Passport     string   `json:"passport"`
+	DocumentType string   `json:"document_type"`
+	Country      string   `json:"country"`
+}
+
+// KycStepRequest represents the request body for updating a verification step
+type KycStepRequest struct {
+	Step int                    `json:"step"`
+	Data map[string]interface{} `json:"data,omitempty"`
+}
+
+// KycCheckRequest represents the request body for document check
+type KycCheckRequest struct {
+	DocumentType   string `json:"document_type,omitempty"`
+	FirstName      string `json:"firstName"`
+	LastName       string `json:"lastName"`
+	Patronymic     string `json:"patronymic,omitempty"`
+	Dob            string `json:"dob"`
+	PassportDate   string `json:"passport_date,omitempty"`
+	Seria          string `json:"seria,omitempty"`
+	Number         string `json:"number,omitempty"`
+	DocumentNumber string `json:"document_number,omitempty"`
+	Residence      string `json:"residence,omitempty"`
+	Citizenship    string `json:"citizenship,omitempty"`
+	FullAddress    string `json:"fullAddress,omitempty"`
+	ZipCode        string `json:"zipCode,omitempty"`
+	City           string `json:"city,omitempty"`
+	Country        string `json:"country,omitempty"`
+}
+
+// KycLivenessStartResponse represents the response for starting a liveness check
+type KycLivenessStartResponse struct {
+	Success        bool          `json:"success"`
+	ChallengeToken string        `json:"challengeToken"`
+	Challenges     []interface{} `json:"challenges"`
+	TimeoutSeconds int           `json:"timeoutSeconds"`
+}
+
+// KycLivenessFrame represents a single frame submitted during liveness verification
+type KycLivenessFrame struct {
+	ChallengeIndex int                    `json:"challengeIndex"`
+	Image          string                 `json:"image"`
+	Landmarks      map[string]interface{} `json:"landmarks,omitempty"`
+	Blendshapes    map[string]interface{} `json:"blendshapes,omitempty"`
+	HeadPose       map[string]interface{} `json:"headPose,omitempty"`
+	Timestamp      float64                `json:"timestamp"`
+}
+
+// KycLivenessVerifyRequest represents the request body for liveness verification
+type KycLivenessVerifyRequest struct {
+	ChallengeToken string                 `json:"challengeToken"`
+	Frames         []KycLivenessFrame     `json:"frames"`
+	AntiSpoofing   map[string]interface{} `json:"antiSpoofing"`
+	Passport       string                 `json:"passport"`
+	DocumentType   string                 `json:"documentType"`
+	Country        string                 `json:"country"`
+}
+
+// KycLivenessVerifyResponse represents the response for liveness verification
+type KycLivenessVerifyResponse struct {
+	Success bool                   `json:"success"`
+	Score   float64                `json:"score"`
+	Passed  bool                   `json:"passed"`
+	Details map[string]interface{} `json:"details"`
+}
+
+// KycRecognizeRequest represents the request body for document OCR recognition
+type KycRecognizeRequest struct {
+	Image        string `json:"image"`
+	DocumentType string `json:"document_type"`
+	Country      string `json:"country"`
+}
+
+// KycRecognizeResponse represents the response for document OCR recognition
+type KycRecognizeResponse struct {
+	Success    bool                   `json:"success"`
+	Confidence float64                `json:"confidence"`
+	Data       map[string]interface{} `json:"data"`
+	Warnings   []string               `json:"warnings"`
+}
